@@ -92,7 +92,7 @@ function createTranslationWindow() {
   translationWindow.setMenu(menu);
 }
 
-function createTray() {
+async function createTray() {
   let iconPath = path.join(__dirname, 'renderer/public/icon.png');
   const fs = require('fs');
   if (!fs.existsSync(iconPath)) {
@@ -104,7 +104,7 @@ function createTray() {
 
   tray = new Tray(resizedImage);
 
-  const devices = getInputDevices();
+  const devices = await getInputDevices();
   const selectedDevice = store.get('device') || (devices.length > 0 ? devices[0].name : 'default');
   if (!store.get('device')) store.set('device', selectedDevice);
 
@@ -115,6 +115,7 @@ function createTray() {
       type: 'radio',
       checked: dev.name === selectedDevice,
       click: () => {
+        console.log('[main] device menu clicked:', dev.name);
         store.set('device', dev.name);
         startRecordingWithDevice(dev.name);
       }
@@ -134,8 +135,8 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 }
 
-app.whenReady().then(() => {
-  createTray();
+app.whenReady().then(async () => {
+  await createTray();
   createTranslationWindow();
   startRecordingWithDevice(store.get('device'));
 });
