@@ -1,0 +1,120 @@
+console.log = (...args) => { process.stdout.write(args.map(String).join(" ") + "
+"); };
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>翻訳ウィンドウ</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; background: #222; }
+    .drag-bar {
+      height: 32px;
+      background: rgba(0,0,0,0.7);
+      -webkit-app-region: drag;
+      cursor: move;
+      display: flex;
+      align-items: center;
+      padding-left: 1em;
+      color: #fff;
+      font-size: 1.2em;
+      user-select: none;
+    }
+    .container {
+      display: flex;
+      height: calc(100vh - 32px);
+      gap: 2em;
+      padding: 1em;
+    }
+    .col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+    .text-area {
+      background: rgba(0,0,0,0.3);
+      border-radius: 1em;
+      flex: 1;
+      min-height: 0;
+      max-height: 100%;
+      overflow-y: auto;
+      color: #fff;
+      font-size: 1.8em;
+      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+      padding: 1em;
+      scrollbar-width: thin;
+    }
+    .text-area::-webkit-scrollbar {
+      width: 8px;
+      background: transparent;
+    }
+    .text-area::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    h1 {
+      color: #fff;
+      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+      margin-bottom: 0.5em;
+    }
+    p { margin: 0 0 0.5em 0; }
+  </style>
+</head>
+<body>
+  <div class="drag-bar">翻訳ウィンドウ</div>
+  <div class="container">
+    <div class="col">
+      <h1>文字起こし</h1>
+      <div id="transcription-text" class="text-area"></div>
+    </div>
+    <div class="col">
+      <h1>英語翻訳</h1>
+      <div id="translation-text" class="text-area"></div>
+    </div>
+  </div>
+  <script>
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.on('transcription', (event, data) => {
+      const el = document.getElementById('transcription-text');
+      if (!el) return;
+      if (typeof data === 'string') {
+        el.textContent = data;
+        return;
+      }
+      if (!data.isFinal) {
+        let interim = el.querySelector('.interim');
+        if (!interim) {
+          interim = document.createElement('span');
+          interim.className = 'interim';
+          el.appendChild(interim);
+        }
+        interim.textContent = data.transcription;
+        el.scrollTop = el.scrollHeight;
+      } else {
+        const interim = el.querySelector('.interim');
+        if (interim) interim.remove();
+        const p = document.createElement('p');
+        p.textContent = data.transcription;
+        el.appendChild(p);
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    ipcRenderer.on('translation', (event, translated) => {
+      const el = document.getElementById('translation-text');
+      if (el) {
+        const p = document.createElement('p');
+        p.textContent = translated;
+        el.appendChild(p);
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    ipcRenderer.on('clear-all', () => {
+      const el1 = document.getElementById('transcription-text');
+      const el2 = document.getElementById('translation-text');
+      if (el1) el1.innerHTML = '';
+      if (el2) el2.innerHTML = '';
+    });
+  </script>
+</body>
+</html>

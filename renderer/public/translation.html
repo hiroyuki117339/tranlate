@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>英語入力・日本語翻訳ウィンドウ</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; 
+      background-color: rgba(0,0,0,0.7); 
+      color: white; 
+      margin: 0; 
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-size: 28px; /* ベースのフォントサイズを大きく */
+    }
+    .container { 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .history-area { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding-right: 10px;
+      margin-bottom: 1em;
+      scrollbar-width: thin;
+      scrollbar-color: #555 #333;
+    }
+    .history-area::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-area::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 4px;
+    }
+    .history-area::-webkit-scrollbar-thumb {
+      background-color: #555;
+      border-radius: 4px;
+    }
+    .live-area { 
+      flex-shrink: 0; 
+      min-height: 2.5em;
+      padding-bottom: 10px;
+    }
+    .transcription-live { 
+      font-weight: 600;
+      margin-bottom: 0.25em;
+      font-size: 1.1em; /* 英語の文字サイズを少し大きく */
+    }
+    .translation-live { 
+      color: #a9fca9;
+      font-size: 1em; /* 翻訳テキストのサイズを調整 */
+      line-height: 1.5; /* 行間を広げて読みやすく */
+    }
+    .history-item {
+      border-bottom: 1px solid #444;
+      padding: 0.5em 0;
+      margin: 0 0 0.75em 0;
+    }
+    .transcription-history { 
+      font-weight: 600; 
+      margin-bottom: 0.4em; 
+      line-height: 1.4;
+      font-size: 1.05em; /* 履歴の英語テキストを少し大きく */
+    }
+    .translation-history { 
+      color: #a9fca9;
+      font-size: 1em; /* 履歴の翻訳テキストを少し大きく */
+      line-height: 1.5; /* 行間を広げて読みやすく */
+      margin-bottom: 0.7em; /* 余白を調整 */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="history-container" class="history-area">
+      <!-- 履歴はここに表示されます -->
+    </div>
+    <div class="live-area">
+      <div id="live-transcription" class="transcription-live"></div>
+      <div id="live-translation" class="translation-live"></div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const historyContainer = document.getElementById('history-container');
+    const liveTranscription = document.getElementById('live-transcription');
+    const liveTranslation = document.getElementById('live-translation');
+
+    ipcRenderer.on('transcription', (event, data) => {
+      console.log('Received transcription data:', data); // デバッグ用
+      if (data.isFinal) {
+        if (data.transcript && data.transcript.trim()) {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+
+          const transcriptionEl = document.createElement('div');
+          transcriptionEl.className = 'transcription-history';
+          transcriptionEl.textContent = data.transcript;
+          historyItem.appendChild(transcriptionEl);
+
+          // 翻訳を表示
+          if (data.translation) {
+            const translationEl = document.createElement('div');
+            translationEl.className = 'translation-history';
+            translationEl.textContent = data.translation;
+            historyItem.appendChild(translationEl);
+          }
+
+          historyContainer.appendChild(historyItem);
+          historyContainer.scrollTop = historyContainer.scrollHeight;
+        }
+        liveTranscription.textContent = '';
+        liveTranslation.textContent = '';
+      } else {
+        liveTranscription.textContent = data.transcript || '';
+        // 翻訳中は「翻訳中...」と表示
+        liveTranslation.textContent = data.transcript ? '翻訳中...' : '';
+      }
+    });
+
+    ipcRenderer.on('clear-all', () => {
+      historyContainer.innerHTML = '';
+      liveTranscription.innerHTML = '';
+      liveTranslation.innerHTML = '';
+    });
+  </script>
+</body>
+</html>

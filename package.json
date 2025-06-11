@@ -1,0 +1,30 @@
+{
+  "name": "voice-transcriber-overlay",
+  "version": "0.1.0",
+  "description": "Mac常駐型 音声認識・翻訳・オーバーレイ表示アプリケーション",
+  "main": "./main.js",
+  "author": "hiroyuki",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "react-start": "react-scripts start",
+    "build": "react-scripts build",
+    "electron-build": "electron-builder"
+  },
+  "dependencies": {
+    "@google-cloud/speech": "^6.4.0",
+    "@google-cloud/translate": "^8.2.0",
+    "dotenv": "^16.4.5",
+    "electron-store": "^8.2.0",
+    "openai": "^4.47.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "electron": "^29.0.0",
+    "electron-builder": "^24.10.0",
+    "react-scripts": "^5.0.1"
+  }
+}

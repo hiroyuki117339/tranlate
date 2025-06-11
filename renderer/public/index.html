@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voice Transcriber Overlay</title>
+  </head>
+  <body style="background:#222; margin:0; padding:0;">
+    <div class="drag-bar">Voice Transcriber Overlay</div>
+    <div class="container">
+      <div class="col">
+        <h1 class="overlay-title">文字起こし</h1>
+        <div id="transcription-text" class="overlay-text-area"></div>
+      </div>
+      <div class="col">
+        <h1 class="overlay-title">英語翻訳</h1>
+        <div id="translation-text" class="overlay-text-area"></div>
+      </div>
+    </div>
+    <style>
+      .container {
+        display: flex;
+        height: calc(100vh - 32px);
+        gap: 2em;
+        padding: 1em;
+      }
+      .col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+      }
+      .overlay-title {
+        color:#fff;
+        text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+        font-size: 2.2em;
+        margin-bottom: 0.5em;
+      }
+      .overlay-text-area {
+        background: rgba(0,0,0,0.3);
+        border-radius: 1em;
+        flex: 1;
+        min-height: 0;
+        max-height: 100%;
+        overflow-y: auto;
+        color:#fff;
+        font-size:2.5em;
+        text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+        padding:1em;
+        scrollbar-width: thin;
+      }
+      .overlay-text-area::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+      }
+      .overlay-text-area::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      .drag-bar {
+        height: 32px;
+        background: rgba(0,0,0,0.7);
+        -webkit-app-region: drag;
+        cursor: move;
+        display: flex;
+        align-items: center;
+        padding-left: 1em;
+        color: #fff;
+        font-size: 1.2em;
+        user-select: none;
+      }
+      p { margin: 0 0 0.5em 0; }
+    </style>
+    <script>
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.on('transcription', (event, data) => {
+      const el = document.getElementById('transcription-text');
+      if (!el) return;
+      if (typeof data === 'string') {
+        el.textContent = data;
+        return;
+      }
+      if (!data.isFinal) {
+        let interim = el.querySelector('.interim');
+        if (!interim) {
+          interim = document.createElement('span');
+          interim.className = 'interim';
+          el.appendChild(interim);
+        }
+        interim.textContent = data.transcription;
+        el.scrollTop = el.scrollHeight;
+      } else {
+        const interim = el.querySelector('.interim');
+        if (interim) interim.remove();
+        const p = document.createElement('p');
+        p.textContent = data.transcription;
+        el.appendChild(p);
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    ipcRenderer.on('translation', (event, translated) => {
+      const el = document.getElementById('translation-text');
+      if (el) {
+        const p = document.createElement('p');
+        p.textContent = translated;
+        el.appendChild(p);
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    </script>
+  </body>
+</html>
